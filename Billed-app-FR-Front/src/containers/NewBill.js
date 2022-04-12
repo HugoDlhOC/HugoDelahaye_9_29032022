@@ -2,6 +2,9 @@ import { ROUTES_PATH } from '../constants/routes.js'
 import Logout from "./Logout.js"
 
 export default class NewBill {
+
+  #compteur = 0;
+
   constructor({ document, onNavigate, store, localStorage }) {
     this.document = document
     this.onNavigate = onNavigate
@@ -17,6 +20,8 @@ export default class NewBill {
   }
   handleChangeFile = e => {
     e.preventDefault()
+    //Initialisation compteur
+    this.#compteur = 0;
     const file = this.document.querySelector(`input[data-testid="file"]`).files[0]
     const filePath = e.target.value.split(/\\/g)
     const fileName = filePath[filePath.length-1]
@@ -24,6 +29,22 @@ export default class NewBill {
     const email = JSON.parse(localStorage.getItem("user")).email
     formData.append('file', file)
     formData.append('email', email)
+
+    //Si le fichier déposé ne respecte pas le type d'extension demandé, alors le compteur s'incrémente
+    if(!fileName.includes("jpg") && !fileName.includes("jpeg") && !fileName.includes("png")){
+      this.#compteur++;
+    }
+
+    //Récupération du bouton de validation de la facture
+    const sendButton = this.document.querySelector("#btn-send-bill")
+
+    //Fichier incorrect, donc bouton grisé SINON bouton utilisable
+    if(this.#compteur === 1){
+      sendButton.setAttribute("disabled", "true");
+    }
+    else{
+      sendButton.removeAttribute("disabled");
+    }
 
     this.store
       .bills()
@@ -34,7 +55,6 @@ export default class NewBill {
         }
       })
       .then(({fileUrl, key}) => {
-        console.log(fileUrl)
         this.billId = key
         this.fileUrl = fileUrl
         this.fileName = fileName
@@ -57,6 +77,8 @@ export default class NewBill {
       fileName: this.fileName,
       status: 'pending'
     }
+    const file = this.document.querySelector(`input[data-testid="file"]`);
+    console.log(file);
     this.updateBill(bill)
     this.onNavigate(ROUTES_PATH['Bills'])
   }

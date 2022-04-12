@@ -10,19 +10,19 @@ import { fireEvent, screen } from "@testing-library/dom";
 describe("Given that I am a user on login page", () => {
   describe("When I do not fill fields and I click on employee button Login In", () => {
     test("Then It should renders Login page", () => {
-      document.body.innerHTML = LoginUI();
+      document.body.innerHTML = LoginUI();  //Importe l'HTML de la page de connexion
 
-      const inputEmailUser = screen.getByTestId("employee-email-input");
-      expect(inputEmailUser.value).toBe("");
+      const inputEmailUser = screen.getByTestId("employee-email-input");  //Récupère la valeur du mail employé saisi
+      expect(inputEmailUser.value).toBe("");  //La valeur doit être vide
 
-      const inputPasswordUser = screen.getByTestId("employee-password-input");
-      expect(inputPasswordUser.value).toBe("");
+      const inputPasswordUser = screen.getByTestId("employee-password-input");  //Récupère la valeur du mdp employé saisi
+      expect(inputPasswordUser.value).toBe(""); //La valeur doit être vide
 
-      const form = screen.getByTestId("form-employee");
-      const handleSubmit = jest.fn((e) => e.preventDefault());
+      const form = screen.getByTestId("form-employee");   //Récupère le formulaire  
+      const handleSubmit = jest.fn((e) => e.preventDefault());  //Modifie le comportement du formulaire
 
-      form.addEventListener("submit", handleSubmit);
-      fireEvent.submit(form);
+      form.addEventListener("submit", handleSubmit);  //Submit évènement créé
+      fireEvent.submit(form); //Initialise un objet de type event et l'envoie à l'élément courant
       expect(screen.getByTestId("form-employee")).toBeTruthy();
     });
   });
@@ -52,7 +52,7 @@ describe("Given that I am a user on login page", () => {
     test("Then I should be identified as an Employee in app", () => {
       document.body.innerHTML = LoginUI();
       const inputData = {
-        email: "johndoe@email.com",
+        email: "employee@test.tld",
         password: "azerty",
       };
 

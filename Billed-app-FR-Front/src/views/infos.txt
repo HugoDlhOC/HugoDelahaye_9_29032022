@@ -1,0 +1,1 @@
+Ce dossier views concerne la partie création HTML.

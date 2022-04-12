@@ -255,6 +255,10 @@ describe("Given I am a user connected as Admin", () => {
       expect(contentPending).toBeTruthy()
       const contentRefused  = await screen.getByText("Refusé (2)")
       expect(contentRefused).toBeTruthy()
+      //Grace à store.js, je sais qu'il n'y a qu'une facture de validé.
+      const contentAccepted  = await screen.getByText("Validé (1)")
+      expect(contentAccepted).toBeTruthy()
+
       expect(screen.getByTestId("big-billed-icon")).toBeTruthy()
     })
   describe("When an error occurs on API", () => {

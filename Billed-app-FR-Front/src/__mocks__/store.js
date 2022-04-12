@@ -1,5 +1,6 @@
 const mockedBills = {
   list() {
+    //La méthode Promise.resolve(valeur) renvoie un objet Promise qui est résolu avec la valeur donnée. Si cette valeur est une promesse, la promesse est renvoyée, si la valeur possède une méthode then, la promesse renvoyée « suivra » cette méthode et prendra son état ; sinon, la promesse renvoyée sera tenue avec la valeur.
     return Promise.resolve([{
       "id": "47qAXb6fIm2zOKkLzMro",
       "vat": "80",
@@ -60,7 +61,6 @@ const mockedBills = {
         "type": "Restaurants et bars",
         "fileUrl": "https://test.storage.tld/v0/b/billable-677b6.a…f-1.jpg?alt=media&token=4df6ed2c-12c8-42a2-b013-346c1346f732"
       }])
-
   },
   create(bill) {
     return Promise.resolve({fileUrl: 'https://localhost:3456/images/test.jpg', key: '1234'})

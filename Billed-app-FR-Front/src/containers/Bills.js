@@ -21,8 +21,11 @@ export default class {
   }
 
   handleClickIconEye = (icon) => {
-    const billUrl = icon.getAttribute("data-bill-url")
-    const imgWidth = Math.floor($('#modaleFile').width() * 0.5)
+    const billUrl = icon.getAttribute("data-bill-url") //L'URL du fichier de justificatif
+    const imgWidth = Math.floor($('#modaleFile').width() * 0.5) //Grandeur de l'image
+    console.log(this.document.querySelector(".modal-body"));
+
+    //On vient ajouter le code HTML avec les valeurs de billUrl et imgWidth dans .modal-body
     $('#modaleFile').find(".modal-body").html(`<div style='text-align: center;' class="bill-proof-container"><img width=${imgWidth} src=${billUrl} alt="Bill" /></div>`)
     $('#modaleFile').modal('show')
   }
@@ -53,6 +56,8 @@ export default class {
             }
           })
           console.log('length', bills.length)
+          console.log(bills);
+          console.log(this.store)
         return bills
       })
     }

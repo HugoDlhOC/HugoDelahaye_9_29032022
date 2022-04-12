@@ -12,7 +12,7 @@ const months_short = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "S
 
 
 // PROTOTYPES
-Date.prototype.getWeekNumber = function () {
+Date.prototype.getWeekNumber = function () {    //Fonction qui retourne le numéro de la semaine actuel
     var d = new Date(Date.UTC(this.getFullYear(), this.getMonth(), this.getDate()));
     var dayNum = d.getUTCDay() || 7;
     d.setUTCDate(d.getUTCDate() + 4 - dayNum);

@@ -1,0 +1,1 @@
+Router organise tout le registre, instancie. Store concerne les données.
