@@ -59,13 +59,13 @@ export default ({ data: bills, loading, error }) => {
         <div id="data-table">
         <table id="example" class="table table-striped" style="width:100%">
           <thead>
-              <tr>
-                <th>Type</th>
-                <th>Nom</th>
-                <th>Date</th>
-                <th>Montant</th>
-                <th>Statut</th>
-                <th>Actions</th>
+              <tr data-testid="table_bills">
+                <th data-testid="element-table_bills-type">Type</th>
+                <th data-testid="element-table_bills-name">Nom</th>
+                <th data-testid="element-table_bills-date">Date</th>
+                <th data-testid="element-table_bills-amount">Montant</th>
+                <th data-testid="element-table_bills-status">Statut</th>
+                <th data-testid="element-table_bills-actions">Actions</th>
               </tr>
           </thead>
           <tbody data-testid="tbody">
