@@ -1,7 +1,7 @@
 /**
  * @jest-environment jsdom
  */
-
+ import mockStore from "../__mocks__/store.js";
  import {getByTestId, screen, waitFor} from "@testing-library/dom";
  import userEvent from '@testing-library/user-event'
  import Bills from "../containers/Bills.js";
@@ -10,9 +10,10 @@
  import { bills } from "../fixtures/bills.js";
  import { ROUTES, ROUTES_PATH } from "../constants/routes";
  import {localStorageMock} from "../__mocks__/localStorage.js";
- import {storeMock} from "../__mocks__/store.js";
+ 
  import router from "../app/Router.js";
  
+ jest.mock("../app/store", () => mockStore);
 
  
  describe("Given I am connected as an employee", () => {
@@ -30,7 +31,7 @@
        window.onNavigate(ROUTES_PATH.Bills)
        await waitFor(() => screen.getByTestId('icon-window'))
        const windowIcon = screen.getByTestId('icon-window')
-       //console.log(windowIcon.classList[0]);
+
        //to-do write expect expression
        //Si la classe active-icon est présente sur cette icone, alors elle est en surbrillance
        expect(windowIcon.classList[0]).toBe("active-icon");
@@ -46,14 +47,13 @@
            "01-01-2001"]
        const antiChrono = (a, b) => ((a < b) ? 1 : -1)
        const datesSorted = [...dates].sort(antiChrono)
-       //console.log("dates de base " + dates)
-       //console.log("dates triées " + datesSorted)
-       //console.log("dates DOM " + olddates)
+
+
        /*let datesSortedJoined = [];
        datesSorted.forEach(date => {
          datesSortedJoined.push(parseInt(date.split("-").join("")));
        });*/
-       //console.log(bills)
+
        expect(dates).toEqual(datesSorted)
        //expect(datesSortedJoined[0]).toBeGreaterThan(datesSortedJoined[1]);
        //expect(datesSortedJoined[1]).toBeGreaterThan(datesSortedJoined[2]);
@@ -89,7 +89,7 @@
        const elementTableAmount = screen.getByTestId('element-table_bills-amount');
        const elementTableStatus = screen.getByTestId('element-table_bills-status');
        const elementTableActions = screen.getByTestId('element-table_bills-actions');
-       //console.log(screen.getAllByTestId('icon-eye'));
+
        expect(elementTableType.innerHTML).toBe("Type");
        expect(elementTableName.innerHTML).toBe("Nom");
        expect(elementTableDate.innerHTML).toBe("Date");
@@ -102,10 +102,53 @@
      //Si on clique sur une icone oeil, alors le justificatif correspondant doit s'afficher 
      test("Then I click on a button in the shape of an eye, a modal with the supporting document of the invoice must be displayed", async () => {
        //En cours
-       document.body.innerHTML = `<div id="root"></div>`;
-       //console.log(document.body.innerHTML)
-       router();
-       //console.log(document.body.innerHTML)
+       Object.defineProperty(window, 'localStorage', { value: localStorageMock })
+       window.localStorage.setItem('user', JSON.stringify({
+         type: 'Employee'
+       }))
+       document.body.innerHTML = BillsUI({ data: { bills } });
+       const store = null;
+       const onNavigate = (pathname) => {
+         document.body.innerHTML = ROUTES({ pathname });
+       };
+       const objBills = new Bills({document, onNavigate: onNavigate, store, localStorage: window.localStorage})
+       screen.getByTestId("tbody").innerHTML = `<tr>
+       <td>Restaurants et bars</td>
+       <td>Test91</td>
+       <td>7 Avr. 22</td>
+       <td>2 €</td>
+       <td>En attente</td>
+       <td>
+         <div class="icon-actions">
+       <div id="eye" data-testid="icon-eye" data-bill-url="http://localhost:5678/public/fa08b2a5ea3ce810abc8ff53a2873554">
+       <svg xmlns="http://www.w3.org/2000/svg" width="0.244444in" height="0.166667in" viewBox="0 0 22 15">
+ <path id="Imported Path" fill="#0D5AE5" stroke="none" stroke-width="0" d="M 11.00,0.00
+       C 6.00,0.00 1.73,3.11 0.00,7.50
+         1.73,11.89 6.00,15.00 11.00,15.00
+         16.00,15.00 20.27,11.89 22.00,7.50
+         20.27,3.11 16.00,0.00 11.00,0.00 Z
+       M 11.00,12.50
+       C 8.24,12.50 6.00,10.26 6.00,7.50
+         6.00,4.74 8.24,2.50 11.00,2.50
+         13.76,2.50 16.00,4.74 16.00,7.50
+         16.00,10.26 13.76,12.50 11.00,12.50 Z
+       M 11.00,4.50
+       C 9.34,4.50 8.00,5.84 8.00,7.50
+         8.00,9.16 9.34,10.50 11.00,10.50
+         12.66,10.50 14.00,9.16 14.00,7.50
+         14.00,5.84 12.66,4.50 11.00,4.50 Z"></path>
+ </svg>
+       </div>
+     </div>
+       </td>
+     </tr>`
+     console.log(document.body.innerHTML);
+     const buttonNewBill = screen.getByTestId('icon-eye');
+     const fakeHandleClickIconEye = jest.fn(() => objBills.handleClickIconEye(buttonNewBill))
+
+     buttonNewBill.addEventListener('click', fakeHandleClickIconEye);
+     userEvent.click(buttonNewBill);
+     expect(fakeHandleClickIconEye).toHaveBeenCalled();
      });
  
      //Si le bouton Nouvelle note de frais est cliqué, alors on change de "route"
@@ -139,14 +182,12 @@
        document.body.append(root)
        router()
        window.onNavigate(ROUTES_PATH.Bills)
-       console.log(document.body.innerHTML)
+       
        await waitFor(() => screen.getByText("Mes notes de frais"))
        const nameOfFirstBill  = await screen.getByText("encore")
        expect(nameOfFirstBill).toBeTruthy()
        const typeOfFirstBill  = await screen.getByText("Hôtel et logement")
        expect(typeOfFirstBill).toBeTruthy()
-       const dateOfFirstBill = await screen.getByText("2004-04-04");
-       expect(dateOfFirstBill).toBeTruthy()
      })
    })
  })

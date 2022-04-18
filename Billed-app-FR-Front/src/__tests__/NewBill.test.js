@@ -76,7 +76,7 @@ describe("Given I am connected as an employee", () => {
       const onNavigate = (pathname) => {
         document.body.innerHTML = ROUTES({ pathname });
       };
-      document.querySelector(`select[data-testid="expense-type"]`).value = "Transports";
+
 
       const objNewBill = new NewBill({document, onNavigate: onNavigate, store: storeMock, localStorage: window.localStorage})
 
@@ -84,7 +84,6 @@ describe("Given I am connected as an employee", () => {
       const buttonSubmit = screen.getByTestId('sumbit-btn');
 
       buttonSubmit.addEventListener('click', (e) =>  {
-        console.log(e.target.querySelector('select[data-testid="expense-type"]'));
         fakeHandleSubmit(e);
       });
       userEvent.click(buttonSubmit);

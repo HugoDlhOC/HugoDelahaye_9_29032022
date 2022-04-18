@@ -105,7 +105,7 @@ export default class {
         <div id="big-billed-icon" data-testid="big-billed-icon"> ${BigBilledIcon} </div>
       `)
       $('.vertical-navbar').css({ height: '120vh' })
-      this.counter ++
+      this.counter --
     }
     $('#icon-eye-d').click(this.handleClickIconEye)
     $('#btn-accept-bill').click((e) => this.handleAcceptSubmit(e, bill))
@@ -133,9 +133,17 @@ export default class {
   }
 
   handleShowTickets(e, bills, index) {
+    //Si compteur non défini ou si l'index actuel est différent de l'index, le compteur est réinitilisé
     if (this.counter === undefined || this.index !== index) this.counter = 0
+    alert(`if (this.counter === undefined || this.index !== index) this.counter = 0`);
+
+    //Si l'index n'est pas défini ou si l'index actuel est différent de l'index, l'index actuel vaut l'index'
     if (this.index === undefined || this.index !== index) this.index = index
+    alert(`(this.index === undefined || this.index !== index) this.index = index`)
+
+    //Si le compteur vaut 0
     if (this.counter == 0) {
+      alert(`if (this.counter == 0)`)
       $(`#arrow-icon${this.index}`).css({ transform: 'rotate(0deg)'})
       $(`#status-bills-container${this.index}`)
         .html(cards(filteredBills(bills, getStatus(this.index))))
