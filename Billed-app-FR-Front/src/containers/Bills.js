@@ -57,6 +57,7 @@ export default class {
           })
           console.log('length', bills.length)
           console.log(bills);
+
           let datesRecup =[];
           const antiChrono = (a, b) => ((a < b) ? 1 : -1) //Si la date est -grande que l'autre alors vrai : 1 
 
