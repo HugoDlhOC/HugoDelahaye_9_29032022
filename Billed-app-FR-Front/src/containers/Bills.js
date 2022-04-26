@@ -41,7 +41,8 @@ export default class {
             try {
               return {
                 ...doc,
-                date: formatDate(doc.date),
+                //date: formatDate(doc.date),
+                //date: doc.date,
                 status: formatStatus(doc.status)
               }
             } catch(e) {
@@ -57,39 +58,8 @@ export default class {
           })
           console.log('length', bills.length)
           console.log(bills);
-
-          let datesRecup =[];
-          const antiChrono = (a, b) => ((a < b) ? 1 : -1) //Si la date est -grande que l'autre alors vrai : 1 
-
-          //Retrouver les index des factures correspondantes au dates
-          bills.forEach((bill, index) => {
-            console.log(bill.date);
-            if(bill.date !== null){
-              datesRecup.push(bill.date + "/" + index);
-            }
-          })
-          console.log(datesRecup)
           console.log(this.store)
-          const datesSorted = [...datesRecup].sort(antiChrono)
-          console.log(datesSorted);
-
-          //Stockage des index du bon ordre des factures
-          let newIndexOfBills = [];
-          datesSorted.forEach(dateSorted => {
-            newIndexOfBills.push(parseInt(dateSorted.split("/")[1]));
-          })
-          console.log(newIndexOfBills);
-
-          //Réorganisation des factures
-          let newOrderOfBills = [];
-          //newIndexOfBills.forEach
-          newIndexOfBills.forEach(newIndexOfBill => {
-            newOrderOfBills.push(bills[newIndexOfBill]);
-          })
-          console.log(newOrderOfBills);
-
-        return newOrderOfBills
-        //return bills
+        return bills
       })
     }
   }
