@@ -98,7 +98,6 @@ export default class {
       $('.vertical-navbar').css({ height: '150vh' })
       this.counter ++
     } else {
-      alert("else " + this.counter)
       $(`#open-bill${bill.id}`).css({ background: '#0D5AE5' })
 
       $('.dashboard-right-container div').html(`
@@ -135,15 +134,12 @@ export default class {
   handleShowTickets(e, bills, index) {
     //Si compteur non défini ou si l'index actuel est différent de l'index, le compteur est réinitilisé
     if (this.counter === undefined || this.index !== index) this.counter = 0
-    alert(`if (this.counter === undefined || this.index !== index) this.counter = 0`);
 
     //Si l'index n'est pas défini ou si l'index actuel est différent de l'index, l'index actuel vaut l'index'
     if (this.index === undefined || this.index !== index) this.index = index
-    alert(`(this.index === undefined || this.index !== index) this.index = index`)
 
     //Si le compteur vaut 0
     if (this.counter == 0) {
-      alert(`if (this.counter == 0)`)
       $(`#arrow-icon${this.index}`).css({ transform: 'rotate(0deg)'})
       $(`#status-bills-container${this.index}`)
         .html(cards(filteredBills(bills, getStatus(this.index))))

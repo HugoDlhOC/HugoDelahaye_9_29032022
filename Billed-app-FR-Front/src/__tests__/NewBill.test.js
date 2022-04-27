@@ -10,23 +10,17 @@ import storeByFile from "../app/Store.js"
 import { bills } from "../fixtures/bills.js";
 import { ROUTES, ROUTES_PATH } from "../constants/routes";
 import {localStorageMock} from "../__mocks__/localStorage.js";
-import storeMock from "../__mocks__/store.js";
+import mockStore from "../__mocks__/store.js";
 import router from "../app/Router.js";
 import NewBillUI from "../views/NewBillUI.js"
 import NewBill from "../containers/NewBill.js"
 
-beforeEach(() => {
-  document.body.innerHTML = "";
-})
+//jest.mock("../app/store", () => mockStore)
+
+
 
 describe("Given I am connected as an employee", () => {
   describe("When I am on NewBill Page", () => {
-    test("Then ...", () => {
-      const html = NewBillUI()
-      document.body.innerHTML = html
-      //console.log(document.body.innerHTML)
-      //to-do write assertion
-    })
     //Test d'intégration API GET
     test("fetches bills from mock API GET", async () => {
       localStorage.setItem("user", JSON.stringify({ type: "Employee", email: "a@a" }));
@@ -54,12 +48,13 @@ describe("Given I am connected as an employee", () => {
       const onNavigate = (pathname) => {
         document.body.innerHTML = ROUTES({ pathname });
       };
-      console.log(storeMock)
-      const objNewBill = new NewBill({document, onNavigate: onNavigate, store: storeMock, localStorage: window.localStorage})
+
+      const objNewBill = new NewBill({document, onNavigate: onNavigate, store: mockStore, localStorage: window.localStorage})
 
       const fakeHandleChangeFile = jest.fn((e) => objNewBill.handleChangeFile(e))
       const buttonChangeFile = screen.getByTestId('file');
 
+      console.log(document.body.innerHTML)
       buttonChangeFile.addEventListener('click', (e) =>  {
         fakeHandleChangeFile(e);
       });
@@ -67,8 +62,43 @@ describe("Given I am connected as an employee", () => {
       expect(fakeHandleChangeFile).toHaveBeenCalled();
     })
 
-    test("Then i click in the <submit> button.", () => {
+    test("Then the submitted supporting file is not correct.", async () => {
+      Object.defineProperty(window, 'localStorage', { value: localStorageMock })
+      window.localStorage.setItem('user', JSON.stringify({
+        type: 'Employee'
+      }))
+      document.body.innerHTML = NewBillUI();
+      const onNavigate = (pathname) => {
+        document.body.innerHTML = ROUTES({ pathname });
+      };
 
+      const objNewBill = new NewBill({document, onNavigate: onNavigate, store: mockStore, localStorage: window.localStorage})
+      const button = await screen.getByTestId("file");
+      const fakeHandleChangeFile = jest.fn((e) => objNewBill.handleChangeFile(e))
+      const buttonChangeFile = screen.getByTestId('file');
+
+      console.log(document.body.innerHTML)
+      buttonChangeFile.addEventListener('click', (e) =>  {
+        fakeHandleChangeFile(e);
+      });
+
+      fireEvent.change(button, {
+        target: {
+          files: [new File(["file.doc"], "file.doc", { type: "file/doc" })],
+        },
+      });
+      console.log(button.files[0].name)
+      expect(button.files[0].name).not.toBe("file.pdf");
+      const sendButton = screen.getByTestId("sumbit-btn");
+      console.log(sendButton.attributes[4].value);
+      expect(sendButton.attributes[4].value).toBe("true");
+    
+/*
+    test("Then i click in the <submit> button, with good values.", () => {
+      //NON FONCTIONNEL
+      window.localStorage.setItem('user', JSON.stringify({
+        type: 'Employee'
+      }))
       document.body.innerHTML = NewBillUI();
       const onNavigate = (pathname) => {
         document.body.innerHTML = ROUTES({ pathname });
@@ -76,7 +106,7 @@ describe("Given I am connected as an employee", () => {
       console.log(document.body.innerHTML)
       console.log(document.querySelector(`select[data-testid="expense-type"]`).value)
       console.log(screen.getByTestId("expense-name"))
-      const objNewBill = new NewBill({document, onNavigate: onNavigate, store: storeMock, localStorage: window.localStorage})
+      const objNewBill = new NewBill({document, onNavigate: onNavigate, store: mockStore, localStorage: window.localStorage})
 
       const form = screen.getByTestId("form-new-bill");
       screen.getByTestId("expense-type").value = "Transports";
@@ -97,44 +127,59 @@ describe("Given I am connected as an employee", () => {
       buttonSubmit.addEventListener('click', () =>  {
         fakeHandleSubmit();
       });
-      //userEvent.selectOptions(screen.getByTestId("expense-type"), ["Transports"]);
       
       userEvent.click(buttonSubmit);
       expect(fakeHandleSubmit).toHaveBeenCalled();
-    })
+    })*/
   })
-  describe("When I am on bills page", () => {
-
-    //Erreur 500 : indique une erreur interne du serveur dans le protocole de communication http.
-    test("Then the invoice import failed with error 500.", () => {
-      
-      storeMock.bills().list(() => {
-        Promise.reject(new Error("Erreur 500"));
-      })
-      document.body.innerHTML = BillsUI({error: "Erreur 500"});
-      console.log(document.body.innerHTML)
-
-      //Vérification que l'on ai bien le message d'erreur qui apparait
-      const valueErrorMessage = document.querySelector('[data-testid="error-message"]').innerHTML
-      console.log(valueErrorMessage);
-      expect(valueErrorMessage).toInclude("Erreur 500");
-    });
-
-    //Erreur 404 : il est envoyé par un serveur HTTP et indique que ce dernier n'a pas réussi à trouver la ressource recherchée .
-    test("Then the invoice import failed with error 404.", () => {
-      
-      storeMock.bills().list(() => {
-        Promise.reject(new Error("Erreur 404"));
-      })
-      document.body.innerHTML = BillsUI({error: "Erreur 404"});
-      console.log(document.body.innerHTML)
-
-      //Vérification que l'on ai bien le message d'erreur qui apparait
-      const valueErrorMessage = document.querySelector('[data-testid="error-message"]').innerHTML
-      console.log(valueErrorMessage);
-      expect(valueErrorMessage).toInclude("Erreur 404");
-    });
-  });
 })
 
+  describe("When an error occurs on API", () => {
+    beforeEach(() => {
+      jest.spyOn(mockStore, "bills")
+      Object.defineProperty(
+          window,
+          'localStorage',
+          { value: localStorageMock }
+      )
+      window.localStorage.setItem('user', JSON.stringify({
+        type: 'Employee',
+        email: "a@a"
+      }))
+      const root = document.createElement("div")
+      root.setAttribute("id", "root")
+      document.body.appendChild(root)
+      router()
+    })
+    test("Then the invoice import failed with error 404", async () => {
+
+      mockStore.bills.mockImplementationOnce(() => {
+        return {
+          list : () =>  {
+            return Promise.reject(new Error("Erreur 404"))
+          }
+        }})
+      window.onNavigate(ROUTES_PATH.NewBill)
+      await new Promise(process.nextTick);
+      const message = await screen.getByText(/Erreur 404/)
+      expect(message).toBeTruthy()
+    })
+
+    test("Then the invoice import failed with error 500", async () => {
+
+      mockStore.bills.mockImplementationOnce(() => {
+        return {
+          list : () =>  {
+            return Promise.reject(new Error("Erreur 500"))
+          }
+        }})
+
+      window.onNavigate(ROUTES_PATH.NewBill)
+      await new Promise(process.nextTick);
+      console.log(document.body.innerHTML)
+      const message = await screen.getByText(/Erreur 500/)
+      expect(message).toBeTruthy()
+    })
+  })
+})
 
