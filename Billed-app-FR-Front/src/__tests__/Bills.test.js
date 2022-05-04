@@ -176,7 +176,18 @@ describe("Given I am connected as an employee", () => {
       userEvent.click(buttonNewBill);
       expect(fakeHandleClickNewBill).toHaveBeenCalled();
     });
+  });
 
+  describe("When I am on Bill page but it is loading", () => {
+    test("Then, Loading page should be rendered", () => {
+      document.body.innerHTML = BillsUI({ loading: true });
+      expect(screen.getAllByText("Loading...")).toBeTruthy();
+    });
+  });
+});
+
+describe("Given I am a user connected as Employee", () => {
+  describe("When I navigate to Bills Page", () => {
     //Test d'intégration API GET
     test("fetches bills from mock API GET", async () => {
       document.body.innerHTML = "";
@@ -196,8 +207,30 @@ describe("Given I am connected as an employee", () => {
       const typeOfFirstBill = await screen.getByText("Hôtel et logement");
       expect(typeOfFirstBill).toBeTruthy();
     });
+  });
 
-    test("fetches messages from an API and fails with 500 message error", async () => {
+  describe("When an error occurs on API", () => {
+    beforeEach(() => {
+      jest.spyOn(mockStore, "bills");
+    });
+
+    //Erreur 404 : il est envoyé par un serveur HTTP et indique que ce dernier n'a pas réussi à trouver la ressource recherchée .
+    test("Then the invoice import failed with error 404", async () => {
+      mockStore.bills.mockImplementationOnce(() => {
+        return {
+          list: () => {
+            return Promise.reject(new Error("Erreur 404"));
+          },
+        };
+      });
+      window.onNavigate(ROUTES_PATH.Bills);
+      await new Promise(process.nextTick);
+      console.log(document.body.innerHTML);
+      const message = await screen.getByText(/Erreur 404/);
+      expect(message).toBeTruthy();
+    });
+
+    test("Then the invoice import failed with error 500", async () => {
       mockStore.bills.mockImplementationOnce(() => {
         return {
           list: () => {
@@ -208,33 +241,9 @@ describe("Given I am connected as an employee", () => {
 
       window.onNavigate(ROUTES_PATH.Bills);
       await new Promise(process.nextTick);
+      console.log(document.body.innerHTML);
       const message = await screen.getByText(/Erreur 500/);
       expect(message).toBeTruthy();
-    });
-
-    //Erreur 404 : il est envoyé par un serveur HTTP et indique que ce dernier n'a pas réussi à trouver la ressource recherchée .
-    test("Then the invoice import failed with error 404.", () => {
-      mockStore.bills().list(() => {
-        Promise.reject(new Error("Erreur 404"));
-      });
-      document.body.innerHTML = BillsUI({ error: "Erreur 404" });
-      console.log(document.body.innerHTML);
-
-      //Vérification que l'on ai bien le message d'erreur qui apparait
-      const valueErrorMessage = document.querySelector(
-        '[data-testid="error-message"]'
-      ).innerHTML;
-      console.log(valueErrorMessage);
-      expect(valueErrorMessage).toInclude("Erreur 404");
-    });
-  });
-  describe("When I am on Bills Page but in loading state", () => {
-    test("Then a loading message is display.", () => {
-      document.body.innerHTML = BillsUI({ loading: true });
-
-      console.log(document.body.innerHTML);
-      console.log(screen.getByText("Loading...").innerHTML);
-      expect(screen.getByText("Loading...")).toBeTruthy();
     });
   });
 });

@@ -25,14 +25,18 @@ export default class NewBill {
     const file = this.document.querySelector(`input[data-testid="file"]`).files[0]
     const filePath = e.target.value.split(/\\/g)
     const fileName = filePath[filePath.length-1].toLowerCase();
+    const fileNameControl = e.target.files[0].name;
     const formData = new FormData()
     const email = JSON.parse(localStorage.getItem("user")).email
     formData.append('file', file)
     formData.append('email', email)
+    console.log(e.target.files[0].name)
 
     //Si le fichier déposé ne respecte pas le type d'extension demandé, alors le compteur s'incrémente
-    if(!fileName.includes("jpg") && !fileName.includes("jpeg") && !fileName.includes("png")){
+    if(!fileNameControl.includes("jpg") && !fileNameControl.includes("jpeg") && !fileNameControl.includes("png")){
       this.#compteur++;
+      console.log(fileName)
+      console.log(e.target.value)
     }
 
     //Récupération du bouton de validation de la facture

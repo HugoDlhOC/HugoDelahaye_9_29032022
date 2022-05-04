@@ -91,3 +91,23 @@ export default {
   },
 }
 
+export function postTest(bill) {
+  return Promise.resolve({
+    "id": bill.id,
+    "vat": bill.vat,
+    "fileUrl": bill.fileUrl,
+    "status": bill.status,
+    "type": bill.type,
+    "commentary": bill.commentary,
+    "name": bill.name,
+    "fileName": bill.fileName,
+    "date": bill.date,
+    "amount": bill.amount,
+    "commentAdmin": bill.commentAdmin,
+    "email": bill.email,
+    "pct": bill.pct
+  })
+};
+
+
+
