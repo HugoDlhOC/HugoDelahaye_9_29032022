@@ -18,16 +18,16 @@ import { bills } from "../fixtures/bills.js";
 import { ROUTES, ROUTES_PATH } from "../constants/routes";
 import { localStorageMock } from "../__mocks__/localStorage.js";
 import mockStore from "../__mocks__/store.js";
-import { postTest } from "../__mocks__/store.js";
+import store, { postTest } from "../__mocks__/store.js";
 import router from "../app/Router.js";
 import NewBillUI from "../views/NewBillUI.js";
 import NewBill from "../containers/NewBill.js";
+import Store from "../app/Store.js";
 import DashboardUI from "../views/DashboardUI.js";
 
 describe("Given I am connected as an employee", () => {
   describe("When I am on NewBill Page", () => {
-    //Test d'intégration API GET
-    test("fetches bills from mock API GET", async () => {
+    test("Then the fields of the form are available", async () => {
       localStorage.setItem(
         "user",
         JSON.stringify({ type: "Employee", email: "a@a" })
@@ -38,12 +38,14 @@ describe("Given I am connected as an employee", () => {
       router();
       window.onNavigate(ROUTES_PATH.NewBill);
       await waitFor(() => screen.getByText("Envoyer une note de frais"));
-      const typeOfSpent1 = await screen.getByText("Transports");
-      expect(typeOfSpent1).toBeTruthy();
-      const typeOfSpent2 = await screen.getByText("Restaurants et bars");
-      expect(typeOfSpent2).toBeTruthy();
-      const typeOfSpent3 = await screen.getByText("Services en ligne");
-      expect(typeOfSpent3).toBeTruthy();
+      expect(screen.getAllByTestId("expense-type")).toBeTruthy();
+      expect(screen.getAllByTestId("expense-name")).toBeTruthy();
+      expect(screen.getAllByTestId("datepicker")).toBeTruthy();
+      expect(screen.getAllByTestId("amount")).toBeTruthy();
+      expect(screen.getAllByTestId("vat")).toBeTruthy();
+      expect(screen.getAllByTestId("pct")).toBeTruthy();
+      expect(screen.getAllByTestId("commentary")).toBeTruthy();
+      expect(screen.getAllByTestId("file")).toBeTruthy();
     });
 
     test("Then the submitted supporting file is not correct.", async () => {
@@ -141,7 +143,7 @@ describe("Given I am connected as an employee", () => {
       const onNavigate = (pathname) => {
         document.body.innerHTML = ROUTES({ pathname });
       };
-
+      
       const objNewBill = new NewBill({
         document,
         onNavigate: onNavigate,
@@ -177,10 +179,12 @@ describe("Given I am connected as an employee", () => {
         "https://cdn.pixabay.com/photo/2022/01/07/07/13/chicago-6921293_1280.jpg";
 
       const fakeHandleSubmit = jest.fn(objNewBill.handleSubmit);
-      form.addEventListener("submit", fakeHandleSubmit);
+      form.addEventListener("submit", fakeHandleSubmit); //a ne pas redéfinir
       fireEvent.submit(form);
+      //userEvent.click(screen.getByTestId("sumbit-btn"))
       expect(fakeHandleSubmit).toHaveBeenCalled();
     });
+
     test("Then the mail icon should be highlighted", async () => {
       document.body.innerHTML = "";
       Object.defineProperty(window, "localStorage", {
@@ -210,11 +214,25 @@ describe("Given I am connected as an employee", () => {
 
 describe("Given I am a user connected as Employee", () => {
   describe("When I navigate to NewBills Page", () => {
-    //POST : on va envoyer des données, créer des données, et si tout s'est bien passé, alors le code retour sera 200
+
     test("Then an invoice is added, the exit code must be 200, test API POST", async () => {
-      //spyOn : Crée une fonction simulée similaire à jest.fn mais qui surveille également les appels à objet[methodName]. Retourne une fonction simulée de Jest.
-      document.innerHTML = "";
-      const spyFctPost = jest.spyOn(mockStore, "bills");
+      document.body.innerHTML = "";
+      const onNavigate = (pathname) => {
+        document.body.innerHTML = ROUTES({ pathname });
+      };
+
+      //ajout de l'html
+      document.body.innerHTML = NewBillUI();
+      console.log(document.body.innerHTML);
+
+      //instanciation
+      const objNewBill = new NewBill({
+        document,
+        onNavigate,
+        store: null,
+        localStorage: window.localStorage,
+      });
+
       const billTest = {
         id: "47qAXb6fIm2zOKkLzMro",
         vat: "80",
@@ -231,18 +249,39 @@ describe("Given I am a user connected as Employee", () => {
         email: "a@a",
         pct: 20,
       };
-      await postTest(billTest);
-      console.log(document.body.innerHTML);
+
+      //remplissage
+      const form = screen.getByTestId("form-new-bill");
+
+      screen.getByTestId("expense-type").value = billTest.type;
+      userEvent.type(screen.getByTestId("expense-name"), billTest.name);
+      screen.getByTestId("datepicker").value = billTest.date;
+      userEvent.type(screen.getByTestId("amount"), billTest.date);
+      userEvent.type(screen.getByTestId("vat"), billTest.vat);
+      userEvent.type(screen.getByTestId("pct"), billTest.pct);
+      userEvent.type(screen.getByTestId("commentary"), billTest.commentary);
+      objNewBill.fileName = billTest.fileName;
+      objNewBill.fileUrl = billTest.fileUrl;
+
+      //simulation - mocks
+      const virtualUpdateBill = (objNewBill.updateBill = jest.fn());
+      const virtualHandleSubmit = jest.fn((e) =>
+        objNewBill.handleSubmit(e)
+      );
+      form.addEventListener("submit", virtualHandleSubmit);
+      fireEvent.submit(form);
+      expect(virtualHandleSubmit).toHaveBeenCalled();
+      expect(virtualUpdateBill).toHaveBeenCalled();
     });
   });
 
   describe("When an error occurs on API", () => {
     beforeEach(() => {
       document.innerHTML = "";
-      jest.spyOn(mockStore, "postTest");
+      jest.spyOn(mockStore, "bills");
     });
 
-    test("Then the invoice import failed with error 404", async () => {
+    test("Then fetches bills from an API and fails with 404 message error", async () => {
       mockStore.bills.mockImplementationOnce(() => {
         return {
           list: () => {
@@ -250,14 +289,13 @@ describe("Given I am a user connected as Employee", () => {
           },
         };
       });
-      window.onNavigate(ROUTES_PATH.NewBill);
-      await new Promise(process.nextTick);
+      document.body.innerHTML = BillsUI({ error: "Erreur 404" });
       console.log(document.body.innerHTML);
       const message = await screen.getByText(/Erreur 404/);
       expect(message).toBeTruthy();
     });
 
-    test("Then the invoice import failed with error 500", async () => {
+    test("Then fetches messages from an API and fails with 500 message error", async () => {
       mockStore.bills.mockImplementationOnce(() => {
         return {
           list: () => {
@@ -266,9 +304,7 @@ describe("Given I am a user connected as Employee", () => {
         };
       });
 
-      window.onNavigate(ROUTES_PATH.NewBill);
-      await new Promise(process.nextTick);
-      console.log(document.body.innerHTML);
+      document.body.innerHTML = BillsUI({ error: "Erreur 500" });
       const message = await screen.getByText(/Erreur 500/);
       expect(message).toBeTruthy();
     });

@@ -104,7 +104,6 @@ describe("Given I am connected as an employee", () => {
       expect(screen.getByTestId("tbody").childElementCount).toEqual(4);
     });
 
-    //Si on clique sur une icone oeil, alors le justificatif correspondant doit s'afficher
     test("Then I click on a button in the shape of an eye, a modal with the supporting document of the invoice must be displayed", async () => {
       Object.defineProperty(window, "localStorage", {
         value: localStorageMock,
@@ -144,7 +143,6 @@ describe("Given I am connected as an employee", () => {
       );
     });
 
-    //Si le bouton Nouvelle note de frais est cliqué, alors on change de "route"
     test("Then I click on the New expense report button, handleClickNewBill() is called", () => {
       Object.defineProperty(window, "localStorage", {
         value: localStorageMock,
@@ -189,7 +187,7 @@ describe("Given I am connected as an employee", () => {
 describe("Given I am a user connected as Employee", () => {
   describe("When I navigate to Bills Page", () => {
     //Test d'intégration API GET
-    test("fetches bills from mock API GET", async () => {
+    test("Then we retrieve the invoices from the simulated API GET", async () => {
       document.body.innerHTML = "";
       localStorage.setItem(
         "user",
@@ -211,11 +209,13 @@ describe("Given I am a user connected as Employee", () => {
 
   describe("When an error occurs on API", () => {
     beforeEach(() => {
-      jest.spyOn(mockStore, "bills");
+      //On mocke la fonction bills présente dans NewBill, utilisée dans le fichier __mocks__/store.js
+      const testSpy = jest.spyOn(mockStore, "bills");
+      console.log(testSpy.mockReturnThis);
     });
 
     //Erreur 404 : il est envoyé par un serveur HTTP et indique que ce dernier n'a pas réussi à trouver la ressource recherchée .
-    test("Then the invoice import failed with error 404", async () => {
+    test("Then fetches messages from an API and fails with 404 message error", async () => {
       mockStore.bills.mockImplementationOnce(() => {
         return {
           list: () => {
@@ -230,7 +230,7 @@ describe("Given I am a user connected as Employee", () => {
       expect(message).toBeTruthy();
     });
 
-    test("Then the invoice import failed with error 500", async () => {
+    test("Then fetches messages from an API and fails with 500 message error", async () => {
       mockStore.bills.mockImplementationOnce(() => {
         return {
           list: () => {
