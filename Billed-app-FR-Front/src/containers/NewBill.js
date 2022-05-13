@@ -30,13 +30,10 @@ export default class NewBill {
     const email = JSON.parse(localStorage.getItem("user")).email
     formData.append('file', file)
     formData.append('email', email)
-    console.log(e.target.files[0].name)
 
     //Si le fichier déposé ne respecte pas le type d'extension demandé, alors le compteur s'incrémente
     if(!fileNameControl.includes("jpg") && !fileNameControl.includes("jpeg") && !fileNameControl.includes("png")){
       this.#compteur++;
-      console.log(fileName)
-      console.log(e.target.value)
     }
 
     //Récupération du bouton de validation de la facture
@@ -82,7 +79,6 @@ export default class NewBill {
       status: 'pending'
     }
     const file = this.document.querySelector(`input[data-testid="file"]`);
-    console.log(file);
     this.updateBill(bill)
     this.onNavigate(ROUTES_PATH['Bills'])
   }

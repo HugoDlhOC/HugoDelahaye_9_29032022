@@ -1,16 +1,15 @@
 /**
  * @jest-environment jsdom
  */
-import { fireEvent, getByTestId, screen, waitFor } from "@testing-library/dom";
+import { screen, waitFor } from "@testing-library/dom";
 import mockStore from "../__mocks__/store.js";
 import userEvent from "@testing-library/user-event";
 import Bills from "../containers/Bills.js";
 import BillsUI from "../views/BillsUI.js";
-import storeByFile from "../app/Store.js";
+import { formatDate } from "../app/format.js";
 import { bills } from "../fixtures/bills.js";
 import { ROUTES, ROUTES_PATH } from "../constants/routes";
 import { localStorageMock } from "../__mocks__/localStorage.js";
-
 import router from "../app/Router.js";
 
 jest.mock("../app/store", () => mockStore);
@@ -41,13 +40,23 @@ describe("Given I am connected as an employee", () => {
     });
 
     test("Then bills should be ordered from earliest to latest", () => {
+      //Ajout des dates dans la page Bills
       document.body.innerHTML = BillsUI({ data: bills });
-      const dates = ["2004-04-04", "2003-03-03", "2002-02-02", "2001-01-01"];
-      const antiChrono = (a, b) => (a < b ? 1 : -1);
-      console.log(dates);
-      const datesSorted = [...dates].sort(antiChrono);
-      console.log(datesSorted);
-      expect(dates).toEqual(datesSorted);
+
+      //On récupère les dates contenues dans la page, on stocke la date en HTML pour la comparer ensuite
+      const datesPage = screen.getAllByTestId("value-element-table_bills-date");
+      const datesPageInnerHTML = [];
+      datesPage.forEach((datePage) => {
+        datesPageInnerHTML.push(datePage.innerHTML);
+      });
+
+      //On récupère les dates des factures bills
+      const billsDates = [];
+      bills.forEach((bill) => {
+        billsDates.push(formatDate(bill.date));
+      });
+
+      expect(datesPageInnerHTML).toEqual(billsDates);
     });
 
     test("Then the array elements are displayed with values", async () => {
@@ -104,43 +113,43 @@ describe("Given I am connected as an employee", () => {
       expect(screen.getByTestId("tbody").childElementCount).toEqual(4);
     });
 
-    test("Then I click on a button in the shape of an eye, a modal with the supporting document of the invoice must be displayed", async () => {
-      Object.defineProperty(window, "localStorage", {
-        value: localStorageMock,
+    describe("When I click on the eye icon", () => {
+      test("Then a modal with the correct proof is displayed.", async () => {
+        Object.defineProperty(window, "localStorage", {
+          value: localStorageMock,
+        });
+        window.localStorage.setItem(
+          "user",
+          JSON.stringify({
+            type: "Employee",
+          })
+        );
+
+        document.body.innerHTML = BillsUI({ data: [...bills] });
+        const store = null;
+        const onNavigate = (pathname) => {
+          document.body.innerHTML = ROUTES({ pathname });
+        };
+        const objBills = new Bills({
+          document,
+          onNavigate: onNavigate,
+          store,
+          localStorage: window.localStorage,
+        });
+
+        const buttonNewBill = screen.getAllByTestId("icon-eye");
+        const fakeHandleClickIconEye = jest.fn(() =>
+          objBills.handleClickIconEye(buttonNewBill[0])
+        );
+
+        buttonNewBill[0].addEventListener("click", fakeHandleClickIconEye);
+        userEvent.click(buttonNewBill[0]);
+        expect(fakeHandleClickIconEye).toHaveBeenCalled();
+        expect(screen.getByText("Justificatif").innerHTML).toBe("Justificatif");
+        expect(screen.getByAltText("Bill").src).toBe(
+          "https://test.storage.tld/v0/b/billable-677b6.a%E2%80%A6f-1.jpg?alt=media&token=c1640e12-a24b-4b11-ae52-529112e9602a"
+        );
       });
-      window.localStorage.setItem(
-        "user",
-        JSON.stringify({
-          type: "Employee",
-        })
-      );
-
-      document.body.innerHTML = BillsUI({ data: [...bills] });
-      const store = null;
-      const onNavigate = (pathname) => {
-        document.body.innerHTML = ROUTES({ pathname });
-      };
-      const objBills = new Bills({
-        document,
-        onNavigate: onNavigate,
-        store,
-        localStorage: window.localStorage,
-      });
-
-      console.log(document.body.innerHTML);
-      const buttonNewBill = screen.getAllByTestId("icon-eye");
-      console.log(buttonNewBill[0].innerHTML);
-      const fakeHandleClickIconEye = jest.fn(() =>
-        objBills.handleClickIconEye(buttonNewBill[0])
-      );
-
-      buttonNewBill[0].addEventListener("click", fakeHandleClickIconEye);
-      userEvent.click(buttonNewBill[0]);
-      expect(fakeHandleClickIconEye).toHaveBeenCalled();
-      expect(screen.getByText("Justificatif").innerHTML).toBe("Justificatif");
-      expect(screen.getByAltText("Bill").src).toBe(
-        "https://test.storage.tld/v0/b/billable-677b6.a%E2%80%A6f-1.jpg?alt=media&token=c1640e12-a24b-4b11-ae52-529112e9602a"
-      );
     });
 
     test("Then I click on the New expense report button, handleClickNewBill() is called", () => {
@@ -210,8 +219,7 @@ describe("Given I am a user connected as Employee", () => {
   describe("When an error occurs on API", () => {
     beforeEach(() => {
       //On mocke la fonction bills présente dans NewBill, utilisée dans le fichier __mocks__/store.js
-      const testSpy = jest.spyOn(mockStore, "bills");
-      console.log(testSpy.mockReturnThis);
+      jest.spyOn(mockStore, "bills");
     });
 
     //Erreur 404 : il est envoyé par un serveur HTTP et indique que ce dernier n'a pas réussi à trouver la ressource recherchée .
@@ -225,7 +233,6 @@ describe("Given I am a user connected as Employee", () => {
       });
       window.onNavigate(ROUTES_PATH.Bills);
       await new Promise(process.nextTick);
-      console.log(document.body.innerHTML);
       const message = await screen.getByText(/Erreur 404/);
       expect(message).toBeTruthy();
     });
@@ -241,7 +248,6 @@ describe("Given I am a user connected as Employee", () => {
 
       window.onNavigate(ROUTES_PATH.Bills);
       await new Promise(process.nextTick);
-      console.log(document.body.innerHTML);
       const message = await screen.getByText(/Erreur 500/);
       expect(message).toBeTruthy();
     });
